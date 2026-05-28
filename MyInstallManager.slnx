@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="MyInstallManager.Tests/MyInstallManager.Tests.csproj" />
+  <Project Path="MyInstallManager/MyInstallManager.csproj" />
+</Solution>
