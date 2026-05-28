@@ -1,18 +1,13 @@
 using System.Management.Automation;
 
-class ScriptRunner
+public class ScriptRunner
 {
     public static List<string> RunPowershellScript(string filename)
     {
+        string script = File.ReadAllText(filename);
         using (PowerShell ps = PowerShell.Create())
         {
-            // Use AddScript to run a block of code or a file path
-            ps.AddScript(filename);
-
-            // Use AddParameter if your script expects inputs
-            // ps.AddParameter("ParamName", "Value");
-
-            var results = ps.Invoke();
+            var results = ps.AddScript(script).Invoke();
             List<string> resultsList = new();
             foreach (var result in results)
             {
