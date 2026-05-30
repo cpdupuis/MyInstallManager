@@ -6,12 +6,13 @@ class Program
 {
     private string[] args;
 
-    static int Main(string[] args)
+    static async Task<int> Main(string[] args)
     {
 
         Console.WriteLine("Hello, World!");
         Program prog = new Program(args);
-        return prog.run();
+        await prog.run();
+        return 0;
     }
 
     public Program(string[] args)
@@ -19,7 +20,7 @@ class Program
         this.args = args;
     }
 
-    public int run()
+    public async Task run()
     {
         Option<string> helpOption = new("--help")
         {
@@ -40,22 +41,28 @@ class Program
         {  
         Description = "URL of the manifest.json to install"
         };
-        Option<string> installDir = new("--dir")
+        Option<string> installDirOption = new("--dir")
         {
             Description = "Directory for installing the application"
         };
         Command installCommand = new("install", "Install the application")
         {
             downloadUrlOption,
-            installDir
+            installDirOption
         };
         rootCommand.Subcommands.Add(installCommand);
 
         statusCommand.SetAction(parsedArgs => GetStatus(parsedArgs));
         updateCommand.SetAction(parsedArgs => DoUpdate(parsedArgs));
-        installCommand.SetAction(parsedArgs => DoInstall(parsedArgs));
-        return rootCommand.Parse(args).Invoke();
-
+        installCommand.SetAction(async parsedArgs => {
+            if (parsedArgs.Errors.Count == 0 && parsedArgs.GetValue(installDirOption) is string installDir) {
+              await DoInstall(installDir);
+            } else
+            {
+                Console.WriteLine("Required arg: --dir");
+            }
+        });
+        rootCommand.Parse(args).Invoke();
     }
 
     private void GetStatus(ParseResult pr)
@@ -69,9 +76,9 @@ class Program
         updater.Update();
     }
 
-    private async Task DoInstall(ParseResult pr)
+    private async Task DoInstall(string installDir)
     {
-        Installer installer = new("http://localhost:3000/apps", ".");
+        Installer installer = new("http://localhost:3000/sample_installation_manifest.json", installDir);
         await installer.Install();
     }
 
