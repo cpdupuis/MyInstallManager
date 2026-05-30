@@ -2,7 +2,7 @@ namespace MyInstallManager;
 
 
 // Class for updating an installation
-class Updater
+public class Updater
 {
     public Updater()
     {

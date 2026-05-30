@@ -1,7 +1,7 @@
 namespace MyInstallManager;
 
 // Class for checking on updater status.
-class UpdaterStatus
+public class UpdaterStatus
 {
     private UpdaterStatus()
     {

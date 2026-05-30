@@ -2,7 +2,7 @@ namespace MyInstallManager;
 using System.Text.Json.Nodes;
 
 // Class to represent the contents of a manifest.json file
-class Manifest
+public class Manifest
 {
     public string InstallURL { get; set;}
     public static Manifest ParseManifest(string str)

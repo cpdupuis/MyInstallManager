@@ -2,8 +2,6 @@
 
 using System.CommandLine;
 
-
-
 class Program
 {
     private string[] args;
