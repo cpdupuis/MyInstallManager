@@ -73,7 +73,7 @@ class Program
 
     private async Task DoInstall(ParseResult pr)
     {
-        Installer installer = new("http://localhost:3000/apps");
+        Installer installer = new("http://localhost:3000/apps", ".");
         await installer.Install();
     }
 

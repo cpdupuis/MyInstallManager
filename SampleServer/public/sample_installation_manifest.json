@@ -1,0 +1,7 @@
+{
+    "name": "My Sample App",
+    "version": "1.0.0",
+    "publisher": "CN=Chris DuPuis, PL=Earth",
+    "installURL": "http://localhost:3000/sample_installation-1.0.0.zip",
+    "updateURLs": []
+}

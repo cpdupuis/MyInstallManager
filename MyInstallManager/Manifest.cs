@@ -1,47 +1,28 @@
 namespace MyInstallManager;
-using System.Text.Json;
+using System.Text.Json.Nodes;
 
 // Class to represent the contents of a manifest.json file
 class Manifest
 {
-    private string baseURL = "http://localhost:3000/apps/whatever";
-    private string os = "win";
-    private string arch = "x64";
-
-    private string version = "0.0.2";
-
-    private string name = "hum";
-
-    private ISet<string> availableUpgradeVersions = new HashSet<string>(["0.0.0", "0.0.1"]);
-    public Manifest()
-    {
-        
-    }
-
-    public string PackageURL()
-    {
-        string filename = $"{name}-{os}-{arch}.hum";
-        return Path.Combine(baseURL, version, filename);
-    }
-
-    public string? UpdateURL(string currentVersion)
-    {
-        if (availableUpgradeVersions.Contains(currentVersion)) {
-            string filename = $"{name}-{os}-{arch}-patch-from-{currentVersion}.hum";
-            return Path.Combine(baseURL, version, filename);
-        }
-        else
-        {
-            return null;
-        }
-
-    }
-
+    public string InstallURL { get; set;}
     public static Manifest ParseManifest(string str)
     {
-        JsonDocument doc = JsonDocument.Parse(str);
-        Manifest man =  new ();
-
-        return man;
+        JsonNode? node = JsonNode.Parse(str);
+        if (node == null)
+        {
+            throw new Exception("Can't parse manifest");
+        }
+        return new Manifest(node);
     }
+
+    private Manifest(JsonNode node)
+    {
+        JsonNode? installURLNode = node["installURL"];
+        if (installURLNode == null)
+        {
+            throw new Exception("No install URL");
+        }
+        this.InstallURL = installURLNode.GetValue<string>();
+        
+    } 
 }
