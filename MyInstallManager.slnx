@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="FullInstaller/FullInstaller.csproj" />
   <Project Path="MyInstallManager.Tests/MyInstallManager.Tests.csproj" />
   <Project Path="MyInstallManager/MyInstallManager.csproj" />
   <Project Path="StubInstaller/StubInstaller.csproj" />
