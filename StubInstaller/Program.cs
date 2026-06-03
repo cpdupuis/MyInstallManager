@@ -78,8 +78,8 @@ class Program
 
     private async Task DoInstall(string installDir)
     {
-        Installer installer = new("http://localhost:3000/sample_installation_manifest.json", installDir);
-        await installer.Install();
+        Installer installer = new();
+        await installer.InstallFromUrl("http://localhost:3000/sample_installation_manifest.json", installDir);
     }
 
 }

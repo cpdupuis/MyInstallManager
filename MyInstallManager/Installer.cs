@@ -5,18 +5,34 @@ using System.IO.Compression;
 
 public class Installer
 {
-    private string manifestURL;
-    private HttpClient httpClient;
+    private  char[] delimiterChars = ['/', '\\'];
 
-    private string installDirectory;
-    public Installer(string manifestURL, string installDirectory)
+
+    public async Task InstallFromEmbeddedResource(Stream zipfileStream, string installDirectory)
     {
-        this.manifestURL = manifestURL;
-        this.installDirectory = installDirectory;
-        httpClient = new();
+        ExtractFromZipStreamToDir(zipfileStream, installDirectory);
+                Console.WriteLine("Finished extracting");
+        // All the files are in place. Now run the on-install script
+        string onInstallScript = Path.Combine(installDirectory, "OnInstall.ps1");
+        Console.WriteLine($"Looking for install script {onInstallScript}");
+        if (Path.Exists(onInstallScript))
+        {
+            Console.WriteLine("Script exxists");
+            List<string> results = ScriptRunner.RunPowershellScript(onInstallScript);
+            foreach (var res in results)
+            {
+                Console.WriteLine("Install script result: " + res);
+            }
+        }
+        else
+        {
+            Console.WriteLine("No such script");
+        }
     }
-    public async Task Install()
+
+    public async Task InstallFromUrl(string manifestURL, string installDirectory)
     {
+        HttpClient httpClient = new();
         Console.WriteLine("INSTALLING!!!!");
         // Fetch and parse the manifest
         string manifestStr;
@@ -73,21 +89,28 @@ public class Installer
         }
     }
 
-    public void ExtractFromZipfileToDir(string zipPath, string extractPath)
+    public void ExtractFromZipStreamToDir(Stream zipStream, string extractPath)
     {
-        char[] delimiterChars = ['/', '\\'];
-
-        using (ZipArchive archive = ZipFile.OpenRead(zipPath))
+        using (ZipArchive archive = new ZipArchive(zipStream))
         {
             foreach (ZipArchiveEntry entry in archive.Entries)
             {
+
+            ExtractOneEntry(entry, extractPath);
+            }
+        }
+        
+    }
+
+    private void ExtractOneEntry(ZipArchiveEntry entry, string extractPath)
+    {
                 List<string> components = new(entry.FullName.Split(delimiterChars, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
                 foreach (string s in components) {
                     Console.WriteLine($"INITCOMP: {s}");
                 }
                 if (components.Count < 2)
                 {
-                    continue;
+                    return;
                 }
                 foreach (string s in components) {
                     Console.WriteLine($"COMP: {s}");
@@ -102,6 +125,17 @@ public class Installer
                 // are case-insensitive.
                 if (destinationPath.StartsWith(extractPath, StringComparison.Ordinal))
                     entry.ExtractToFile(destinationPath);
+
+    }
+
+    public void ExtractFromZipfileToDir(string zipPath, string extractPath)
+    {
+
+        using (ZipArchive archive = ZipFile.OpenRead(zipPath))
+        {
+            foreach (ZipArchiveEntry entry in archive.Entries)
+            {
+                ExtractOneEntry(entry, extractPath);
             }
         }
     }
