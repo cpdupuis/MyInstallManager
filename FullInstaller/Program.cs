@@ -1,10 +1,7 @@
 ﻿namespace MyInstallManager;
 
 using System.CommandLine;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Reflection;
-using System.Resources;
 
 class Program
 {
@@ -87,39 +84,21 @@ class Program
         updater.Update();
     }
 
-    [RequiresAssemblyFiles("Calls System.Reflection.Assembly.GetFile(String)")]
     private async Task DoInstall(string installDir)
     {
-        string? resourceName = null;
-        foreach (var name in Assembly.GetExecutingAssembly().GetManifestResourceNames())
-        {
-            Console.WriteLine(name);
-            if (name.Contains("firefox"))
-            {
-                resourceName = name;
-            }
-        }
-        if (resourceName != null)
-        {
-        string resourceDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources");
-        Console.WriteLine($"Resource dir: {resourceDir}");
-        //ResourceManager rm = ResourceManager.CreateFileBasedResourceManager("FullInstaller", resourceDir, null);
-        Console.WriteLine("Yup");
+        const string resourceName = "sample_installation.zip";
 
-        // "MyApp.Properties.Resources" corresponds to your RootName (Namespace.ResourceFile)
-        //ResourceManager rm = new ResourceManager("FullInstaller.firefox-152.0a1.en-US.win64.zip", Assembly.GetExecutingAssembly());
-        //ResourceManager rm = new ResourceManager();
-        //CultureInfo culture = new CultureInfo("en");
-        //    var zipfileStream = rm.GetStream(resourceName, culture);
-        var zipfileStream = Assembly.GetExecutingAssembly().GetFile("FullInstaller.firefox-152.0a1.en-US.win64.zip");
-            if (zipfileStream != null)
-            {
-                Installer installer = new();
-                await installer.InstallFromEmbeddedResource(zipfileStream, installDir);
-                Console.WriteLine("Done");
-            }
+        await using Stream? zipfileStream =
+            Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
+        if (zipfileStream is null)
+        {
+            Console.WriteLine($"Embedded resource not found: {resourceName}");
+            return;
         }
 
+        Installer installer = new();
+        await installer.InstallFromEmbeddedResource(zipfileStream, installDir);
+        Console.WriteLine("Done");
     }
 
 }

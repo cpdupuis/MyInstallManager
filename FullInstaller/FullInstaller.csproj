@@ -13,7 +13,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MyInstallManager\MyInstallManager.csproj" />
-    <EmbeddedResource Include="..\SampleServer\public\sample_installation-1.0.0.zip" />
+    <EmbeddedResource Include="..\SampleServer\public\sample_installation-1.0.0.zip">
+      <LogicalName>sample_installation.zip</LogicalName>
+    </EmbeddedResource>
     <EmbeddedResource Include="D:\scratch\firefox-152.0a1.en-US.win64.zip"/>
 </ItemGroup>
 
