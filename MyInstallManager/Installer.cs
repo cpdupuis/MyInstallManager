@@ -11,7 +11,7 @@ public class Installer
     public async Task InstallFromEmbeddedResource(Stream zipfileStream, string installDirectory)
     {
         ExtractFromZipStreamToDir(zipfileStream, installDirectory);
-                Console.WriteLine("Finished extracting");
+        Console.WriteLine("Finished extracting");
         // All the files are in place. Now run the on-install script
         string onInstallScript = Path.Combine(installDirectory, "OnInstall.ps1");
         Console.WriteLine($"Looking for install script {onInstallScript}");
@@ -95,8 +95,8 @@ public class Installer
         {
             foreach (ZipArchiveEntry entry in archive.Entries)
             {
-
-            ExtractOneEntry(entry, extractPath);
+                Console.WriteLine($"Extracting an entry to {extractPath}: {entry.FullName}");
+                ExtractOneEntry(entry, extractPath);
             }
         }
         
@@ -118,6 +118,10 @@ public class Installer
                 components.RemoveAt(0);
                 components.Insert(0, extractPath);
                 string destinationPath = Path.Combine(components.ToArray());
+                string? destinationFolder = Path.GetDirectoryName(destinationPath);
+                if (destinationFolder != null && !Path.Exists(destinationFolder)) {
+                    Directory.CreateDirectory(destinationFolder);
+                }
                 // Gets the full path to ensure that relative segments are removed.
                 //string destinationPath = Path.GetFullPath(Path.Combine(extractPath, entry.Name));
                 Console.WriteLine($"This is destination for the file {entry.FullName}: {destinationPath}");
