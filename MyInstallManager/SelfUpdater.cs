@@ -5,6 +5,11 @@ class SelfUpdater
         
     }
 
+    public bool isUpdateAvailable()
+    {
+        return false;
+    }
+
     public void UpdatePrepare()
     {
         // In the Prepare process ("official path")
@@ -21,7 +26,7 @@ class SelfUpdater
 
         // In the Commit process ("temp path")
 
-        // Swap official executable for for the temporary one
+        // Swap official executable for the temporary one
 
         // Exec the new official executable with next phase args
 
