@@ -97,7 +97,7 @@ class Program
         }
 
         Installer installer = new();
-        await installer.InstallFromEmbeddedResource(zipfileStream, installDir);
+        await installer.InstallFromZipStream(zipfileStream, installDir);
         Console.WriteLine("Done");
     }
 
