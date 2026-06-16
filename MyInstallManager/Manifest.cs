@@ -5,9 +5,9 @@ using System.Text.Json.Nodes;
 public class Manifest
 {
     public string InstallURL { get; set;}
-    public static Manifest ParseManifest(string str)
+    public static Manifest ParseManifest(Stream input)
     {
-        JsonNode? node = JsonNode.Parse(str);
+        JsonNode? node = JsonNode.Parse(input);
         if (node == null)
         {
             throw new Exception("Can't parse manifest");

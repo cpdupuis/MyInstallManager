@@ -86,18 +86,29 @@ class Program
 
     private async Task DoInstall(string installDir)
     {
-        const string resourceName = "sample_installation.zip";
+        const string zipfileResourceName = "sample_installation.zip";
+        const string manifestResourceName = "sample_installation_manifest.json";
 
         await using Stream? zipfileStream =
-            Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
+            Assembly.GetExecutingAssembly().GetManifestResourceStream(zipfileResourceName);
         if (zipfileStream is null)
         {
-            Console.WriteLine($"Embedded resource not found: {resourceName}");
+            Console.WriteLine($"Embedded resource not found: {zipfileResourceName}");
             return;
         }
 
+        Manifest manifest;
+        await using (Stream? manifestStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(manifestResourceName)) {
+            if (manifestStream is null)
+            {
+                Console.WriteLine($"Embedded resource not found: {manifestResourceName}");
+                return;
+            }
+            manifest = Manifest.ParseManifest(manifestStream);
+        }
+
         Installer installer = new();
-        await installer.InstallFromZipStream(zipfileStream, installDir);
+        await installer.InstallFromZipStream(zipfileStream, installDir, manifest);
         Console.WriteLine("Done");
     }
 

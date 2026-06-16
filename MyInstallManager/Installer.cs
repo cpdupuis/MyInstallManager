@@ -12,25 +12,19 @@ public class Installer
         HttpClient httpClient = new();
         Console.WriteLine("INSTALLING!!!!");
         // Fetch and parse the manifest
-        string manifestStr;
-        if (manifestURL.StartsWith("http"))
-        {
-            manifestStr = await httpClient.GetStringAsync(manifestURL);
+        Manifest manifest;
+        await using (Stream manifestStream = await httpClient.GetStreamAsync(manifestURL)) {
+            manifest = Manifest.ParseManifest(manifestStream);
         }
-        else
-        {
-            manifestStr = await File.ReadAllTextAsync(manifestURL);
-        }
-        Manifest manifest = Manifest.ParseManifest(manifestStr);
 
         // Download the package archive
         using (Stream httpStream = await httpClient.GetStreamAsync(manifest.InstallURL))
         {
-            await InstallFromZipStream(httpStream, installDirectory);
+            await InstallFromZipStream(httpStream, installDirectory, manifest);
         }
     }
 
-    public async Task InstallFromZipStream(Stream zipfileStream, string installDirectory)
+    public async Task InstallFromZipStream(Stream zipfileStream, string installDirectory, Manifest manifest)
     {
         // If it already exists, this is a no-op.
         // (TODO: we should probably reject installing if it does exist)
