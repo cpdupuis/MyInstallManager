@@ -1,7 +1,7 @@
 namespace MyInstallManager;
 // Class for installing a program
 using System.IO.Compression;
-
+using System.Text;
 
 public class Installer
 {
@@ -29,6 +29,12 @@ public class Installer
         // If it already exists, this is a no-op.
         // (TODO: we should probably reject installing if it does exist)
         Directory.CreateDirectory(installDirectory);
+
+        string manifestPath = Path.Combine(installDirectory, "update-manifest.json");
+        using (Stream fileStream = File.Open(manifestPath, FileMode.CreateNew, FileAccess.Write, FileShare.None)) {
+            byte[] encoded = new UTF8Encoding(true).GetBytes(manifest.Serialize());
+            fileStream.Write(encoded, 0, encoded.Length);
+        }
 
         ExtractFromZipStreamToDir(zipfileStream, installDirectory);
         Console.WriteLine("Finished extracting");
