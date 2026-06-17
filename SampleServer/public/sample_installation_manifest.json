@@ -4,5 +4,5 @@
     "publisher": "CN=Chris DuPuis, PL=Earth",
     "installURL": "http://localhost:3000/sample_installation-1.0.0.zip",
     "updateURLs": ["http://localhost:3000/sample_installation_manifest.json"],
-    "selfUpdaterURL": "http://localhost:3000/updater-latest.exe"
+    "selfUpdaterURL": "http://localhost:3000/updater-1.0.0.exe"
 }

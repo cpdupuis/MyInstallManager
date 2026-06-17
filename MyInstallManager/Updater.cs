@@ -42,6 +42,10 @@ public class Updater
             return;
         }
 
+        if (AllowSelfUpdate && await SelfUpdater.SelfUpdateIfNeeded(client, installationDir, originalManifest, latestManifest)) {
+            // The subprocess performed the update.
+            return;
+        }
 
         // TODO do the rest of the update
     }
