@@ -7,31 +7,14 @@ public class Locker
         // Don't instantiate me.
     }
 
-    public static void WithLock(string lockname, Action action)
+    public static async Task WithLock(string lockname, Func<Task> action)
     {
-        NamedWaitHandleOptions waitHandleOptions = new();
-        waitHandleOptions.CurrentSessionOnly = false;
-        waitHandleOptions.CurrentUserOnly = false;
-
-        bool isLocked = false;
-        using (Mutex mutex = new Mutex(lockname, waitHandleOptions))
-        {
-            try
-            {
-                mutex.WaitOne();
-                isLocked = true;
-                action();
-            }
-            finally
-            {
-                if (isLocked)
-                {
-                    mutex.ReleaseMutex();
-
-                }
-            }
+        using (FileStream fs = File.Open(lockname, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read | FileShare.Write | FileShare.Delete)) {
+            // C# implicitly takes an exclusive lock, which is conveniently
+            // exactly what we want.
+            fs.Lock(0, 1);
+            await action();
         }
-
     }
 
 }

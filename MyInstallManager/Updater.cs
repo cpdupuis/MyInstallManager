@@ -12,8 +12,15 @@ public class Updater
         this.installationDir = installationDir;
     }
 
-    public async Task Update()
+    public Task Update()
     {
+        Console.WriteLine("Waiting for update lock...");
+        // tmp
+        string path = Path.GetTempFileName();
+        return Locker.WithLock(path, () => DoUpdate());
+    }
+
+    private async Task DoUpdate() {
         Console.WriteLine("UPDATING!!!!");
         string manifestPath = Path.Combine(installationDir, "update-manifest.json");
         Manifest originalManifest;
