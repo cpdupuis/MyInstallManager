@@ -4,26 +4,50 @@ namespace MyInstallManager;
 // Class for updating an installation
 public class Updater
 {
-    private SelfUpdater selfUpdater;
-    public Updater()
+    public bool AllowSelfUpdate = true;
+
+    private string installationDir;
+    public Updater(string installationDir)
     {
-        selfUpdater = new SelfUpdater();
+        this.installationDir = installationDir;
     }
 
-
-    public void Update()
+    public async Task Update()
     {
-        if (selfUpdater.isUpdateAvailable())
-        {
-            // Start the "prepare" phase of the self updater.
-            // ()
-            selfUpdater.UpdatePrepare();
-            // The UpdatePrepare step is supposed to restart the updater.
-            // So if we get to here, there was a problem.
-            throw new Exception("UpdatePrepare didn't restart the updater");
+        Console.WriteLine("UPDATING!!!!");
+        string manifestPath = Path.Combine(installationDir, "update-manifest.json");
+        Manifest originalManifest;
+        await using (FileStream fileStream = File.OpenRead(manifestPath)) {
+            originalManifest = Manifest.ParseManifest(fileStream);
         }
-        // See if there is a new version of the manifest
-        
+
+        Manifest? latestManifest = null;
+        HttpClient client = new();
+        foreach (string updateURL in originalManifest.UpdateURLs) {
+            Console.WriteLine($"Trying {updateURL}");
+            try {
+                // Do these one-at-a-time to avoid unneeded I/O.
+                await using (Stream stream = await client.GetStreamAsync(updateURL)) {
+                    latestManifest = Manifest.ParseManifest(stream);
+                }
+                Console.WriteLine("  OK");
+            } catch (Exception e) {
+                Console.WriteLine($"  failed: {e.Message}");
+                continue;
+            }
+        }
+
+        if (latestManifest == null) {
+            // Couldn't fetch the latest update.
+            return;
+        }
+
+        if (AllowSelfUpdate && await SelfUpdater.SelfUpdateIfNeeded(client, installationDir, originalManifest, latestManifest)) {
+            // The subprocess performed the update.
+            return;
+        }
+
+        // TODO do the rest of the update
     }
 
 }

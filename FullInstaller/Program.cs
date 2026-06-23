@@ -39,9 +39,6 @@ class Program
         Command statusCommand = new("status", "Check the status");
         rootCommand.Subcommands.Add(statusCommand);
 
-        Command updateCommand = new("update", "Update the installation");
-        rootCommand.Subcommands.Add(updateCommand);
-
         Option<string> downloadUrlOption = new("--url")
         {
             Description = "URL of the manifest.json to install"
@@ -57,8 +54,30 @@ class Program
         };
         rootCommand.Subcommands.Add(installCommand);
 
+        Option<string> noSelfUpdateOption = new("--no-self-update")
+        {
+            Description = "Attempts to update with this instance instead of doing a self-update first",
+            Hidden = true,
+        };
+        Command updateCommand = new("update", "Update the installation")
+        {
+            installDirOption,
+            noSelfUpdateOption
+        };
+        rootCommand.Subcommands.Add(updateCommand);
+
         statusCommand.SetAction(parsedArgs => GetStatus(parsedArgs));
-        updateCommand.SetAction(parsedArgs => DoUpdate(parsedArgs));
+        updateCommand.SetAction(async parsedArgs =>
+        {
+            if (parsedArgs.Errors.Count > 0 || parsedArgs.GetValue(installDirOption) is null)
+            {
+                Console.WriteLine("Required arg: --dir");
+                return;
+            }
+            Updater updater = new(parsedArgs.GetValue(installDirOption)!);
+            updater.AllowSelfUpdate = parsedArgs.GetValue(noSelfUpdateOption) == null;
+            await updater.Update();
+        });
         installCommand.SetAction(async parsedArgs =>
         {
             if (parsedArgs.Errors.Count == 0 && parsedArgs.GetValue(installDirOption) is string installDir)
@@ -78,26 +97,31 @@ class Program
         Console.WriteLine(UpdaterStatus.GetStatus());
     }
 
-    private void DoUpdate(ParseResult pr)
-    {
-        Updater updater = new();
-        updater.Update();
-    }
-
     private async Task DoInstall(string installDir)
     {
-        const string resourceName = "sample_installation.zip";
+        const string zipfileResourceName = "sample_installation.zip";
+        const string manifestResourceName = "sample_installation_manifest.json";
 
         await using Stream? zipfileStream =
-            Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
+            Assembly.GetExecutingAssembly().GetManifestResourceStream(zipfileResourceName);
         if (zipfileStream is null)
         {
-            Console.WriteLine($"Embedded resource not found: {resourceName}");
+            Console.WriteLine($"Embedded resource not found: {zipfileResourceName}");
             return;
         }
 
+        Manifest manifest;
+        await using (Stream? manifestStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(manifestResourceName)) {
+            if (manifestStream is null)
+            {
+                Console.WriteLine($"Embedded resource not found: {manifestResourceName}");
+                return;
+            }
+            manifest = Manifest.ParseManifest(manifestStream);
+        }
+
         Installer installer = new();
-        await installer.InstallFromEmbeddedResource(zipfileStream, installDir);
+        await installer.InstallFromZipStream(zipfileStream, installDir, manifest);
         Console.WriteLine("Done");
     }
 
