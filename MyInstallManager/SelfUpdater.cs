@@ -16,16 +16,19 @@ class SelfUpdater
             return false;
         }
 
-        // Create an updated executable in a temporary file
-        string temp = Path.GetTempFileName();
-        using (FileStream file = File.Open(temp, FileMode.Open, FileAccess.Write, FileShare.Read)) {
+        // Create an updated executable in a temporary file. This temporary
+        // file needs to be on the same filesystem, or else we won't be able to
+        // replace the running executable.
+        string currentExe = Environment.ProcessPath;
+        string downloadTo = currentExe + ".replacement";
+        using (FileStream file = File.Open(downloadTo, FileMode.Create, FileAccess.Write, FileShare.Read)) {
             await using (Stream executable = await client.GetStreamAsync(url)) {
                 await executable.CopyToAsync(file);
             }
         }
 
         // Exec the new executable
-        Process process = Process.Start(temp, new string[] { "update", installationDir, "--no-self-update" });
+        Process process = Process.Start(downloadTo, new string[] { "update", installationDir, "--no-self-update" });
 
         // Wait for new process to exit
         await process.WaitForExitAsync();
@@ -35,11 +38,11 @@ class SelfUpdater
             // The update was successful, replace ourselves. (This doesn't
             // follow the original plan, I just don't want to wire up another
             // command-line argument and I think it still makes sense.)
-            Console.WriteLine($"Updater seems to be at {Environment.ProcessPath}");
-            string toRemove = Path.GetTempFileName();
-            File.Move(temp, Environment.ProcessPath, true);
+            Console.WriteLine($"Updater seems to be at {currentExe}");
+            File.Replace(downloadTo, currentExe, null);
         } else {
-            File.Delete(temp);
+            // Something went wrong, don't trust it.
+            File.Delete(downloadTo);
         }
 
         return true;
