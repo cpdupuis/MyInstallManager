@@ -28,7 +28,7 @@ class SelfUpdater
         }
 
         // Exec the new executable
-        Process process = Process.Start(downloadTo, new string[] { "update", installationDir, "--no-self-update" });
+        Process process = Process.Start(downloadTo, new string[] { "update", "--dir", installationDir, "--no-self-update" });
 
         await locker.WithoutLock(async (_locker) => {
             // Wait for new process to exit
