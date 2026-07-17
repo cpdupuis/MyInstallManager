@@ -24,20 +24,33 @@ public class Installer
         }
     }
 
-    public async Task InstallFromZipStream(Stream zipfileStream, string installDirectory, Manifest manifest)
+    public async Task InstallFromZipStream(Stream zipfileStream, string installDirectory, Manifest manifest, bool isUpdate = false)
     {
         // If it already exists, this is a no-op.
         // (TODO: we should probably reject installing if it does exist)
         Directory.CreateDirectory(installDirectory);
 
         string manifestPath = Path.Combine(installDirectory, "update-manifest.json");
-        using (Stream fileStream = File.Open(manifestPath, FileMode.CreateNew, FileAccess.Write, FileShare.None)) {
+        using (Stream fileStream = File.Open(manifestPath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None)) {
             byte[] encoded = new UTF8Encoding(true).GetBytes(manifest.Serialize());
             fileStream.Write(encoded, 0, encoded.Length);
         }
 
         ExtractFromZipStreamToDir(zipfileStream, installDirectory);
         Console.WriteLine("Finished extracting");
+
+        // Install the updater. (HACKY: this only really works for the stub
+        // installer. The full installer will need some other way to bundle it,
+        // I'd have to talk to Chris about that.)
+        if (!isUpdate) {
+            string updaterPath = Path.Combine(installDirectory, "updater.exe");
+            using (Stream fileStream = File.Open(updaterPath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None)) {
+                await using (Stream updaterStream = await new HttpClient().GetStreamAsync(manifest.SelfUpdaterURL!)) {
+                    await updaterStream.CopyToAsync(fileStream);
+                }
+            }
+        }
+
         // All the files are in place. Now run the on-install script
         string onInstallScript = Path.Combine(installDirectory, "OnInstall.ps1");
         Console.WriteLine($"Looking for install script {onInstallScript}");
@@ -93,6 +106,7 @@ public class Installer
                 Console.WriteLine($"This is destination for the file {entry.FullName}: {destinationPath}");
                 // Ordinal match is safest, case-sensitive volumes can be mounted within volumes that
                 // are case-insensitive.
+                File.Delete(destinationPath);
                 if (destinationPath.StartsWith(extractPath, StringComparison.Ordinal))
                     entry.ExtractToFile(destinationPath);
 

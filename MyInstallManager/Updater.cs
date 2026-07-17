@@ -57,7 +57,12 @@ public class Updater
             return;
         }
 
-        // TODO do the rest of the update
+        Console.WriteLine("Installing update...");
+        Installer installer = new();
+        await using (Stream stream = await client.GetStreamAsync(latestManifest.InstallURL)) {
+            await installer.InstallFromZipStream(stream, installationDir, latestManifest, true);
+        }
+        Console.WriteLine("Update complete!");
     }
 
 }
