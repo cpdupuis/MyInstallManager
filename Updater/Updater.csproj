@@ -13,12 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MyInstallManager\MyInstallManager.csproj" />
-    <EmbeddedResource Include="..\SampleServer\public\sample_installation-1.0.0.zip">
-      <LogicalName>installation.zip</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="..\SampleServer\public\sample_installation_manifest.json">
-      <LogicalName>installation_manifest.json</LogicalName>
-    </EmbeddedResource>
   </ItemGroup>
 
 </Project>
