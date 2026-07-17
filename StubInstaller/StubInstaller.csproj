@@ -2,6 +2,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MyInstallManager\MyInstallManager.csproj" />
+    <EmbeddedResource Include="..\SampleServer\public\sample_installation_manifest.json">
+      <LogicalName>installation_manifest.json</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
   <PropertyGroup>
@@ -9,6 +12,10 @@
     <TargetFramework>net10.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PublishTrimmed>true</PublishTrimmed>
   </PropertyGroup>
 
 </Project>
