@@ -15,12 +15,15 @@ public class Updater
     public Task Update()
     {
         Console.WriteLine("Waiting for update lock...");
-        // tmp
-        string path = Path.GetTempFileName();
-        return Locker.WithLock(path, () => DoUpdate());
+        // As a ripoff for the POC, just use the correct value for
+        //   C:\Program Files\Mozilla Developer Preivew
+        return Locker.WithLock(
+            @"C:\ProgramData\Mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\UpdateLock-80A59B799D16B05B",
+            (locker) => DoUpdate(locker)
+        );
     }
 
-    private async Task DoUpdate() {
+    private async Task DoUpdate(Locker locker) {
         Console.WriteLine("UPDATING!!!!");
         string manifestPath = Path.Combine(installationDir, "update-manifest.json");
         Manifest originalManifest;
@@ -49,7 +52,7 @@ public class Updater
             return;
         }
 
-        if (AllowSelfUpdate && await SelfUpdater.SelfUpdateIfNeeded(client, installationDir, originalManifest, latestManifest)) {
+        if (AllowSelfUpdate && await SelfUpdater.SelfUpdateIfNeeded(client, installationDir, originalManifest, latestManifest, locker)) {
             // The subprocess performed the update.
             return;
         }

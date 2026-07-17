@@ -8,7 +8,7 @@ class SelfUpdater
     {
     }
 
-    public static async Task<bool> SelfUpdateIfNeeded(HttpClient client, string installationDir, Manifest originalManifest, Manifest latestManifest) {
+    public static async Task<bool> SelfUpdateIfNeeded(HttpClient client, string installationDir, Manifest originalManifest, Manifest latestManifest, Locker locker) {
         // TODO compare versions of the two, return false if we're newer (?)
 
         string? url = latestManifest.SelfUpdaterURL;
@@ -30,8 +30,10 @@ class SelfUpdater
         // Exec the new executable
         Process process = Process.Start(downloadTo, new string[] { "update", installationDir, "--no-self-update" });
 
-        // Wait for new process to exit
-        await process.WaitForExitAsync();
+        await locker.WithoutLock(async (_locker) => {
+            // Wait for new process to exit
+            await process.WaitForExitAsync();
+        });
 
         Console.WriteLine($"Subprocess finished! Exit code: {process.ExitCode}");
         if (process.ExitCode == 0) {
